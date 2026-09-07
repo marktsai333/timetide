@@ -31,7 +31,7 @@ export function TimeRail({
   return (
     <div className="relative h-full">
       {showDivider && (
-        <DayDivider instant={instant} ianaTimezone={profile.ianaTimezone} align={align} accentVar={accentVar} />
+        <DayDivider instant={instant} ianaTimezone={profile.ianaTimezone} accentVar={accentVar} />
       )}
       <TimeRowCell
         instant={instant}

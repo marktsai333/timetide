@@ -4,12 +4,10 @@ import { formatDayLabel } from "../../lib/timezone";
 export function DayDivider({
   instant,
   ianaTimezone,
-  align,
   accentVar,
 }: {
   instant: DateTime;
   ianaTimezone: string;
-  align: "left" | "right";
   accentVar: string;
 }) {
   const label = formatDayLabel(instant, ianaTimezone);
@@ -17,7 +15,7 @@ export function DayDivider({
   return (
     <div
       className="absolute top-0 left-0 right-0 flex px-3 animate-[dayDividerFadeIn_0.4s_var(--ease-out-strong)]"
-      style={{ justifyContent: align === "left" ? "flex-start" : "flex-end", pointerEvents: "none" }}
+      style={{ justifyContent: "center", pointerEvents: "none" }}
     >
       <span
         className="rounded-full px-2 py-0.5"
@@ -26,6 +24,7 @@ export function DayDivider({
           fontWeight: 600,
           color: `var(${accentVar})`,
           background: accentVar === "--rail-self" ? "var(--rail-self-soft)" : "var(--rail-partner-soft)",
+          opacity: 0.5,
           transform: "translateY(-50%)",
         }}
       >
