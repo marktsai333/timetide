@@ -17,7 +17,7 @@ export function DayDivider({
   return (
     <div
       className="absolute top-0 left-0 right-0 flex px-3 animate-[dayDividerFadeIn_0.4s_var(--ease-out-strong)]"
-      style={{ justifyContent: align === "left" ? "flex-end" : "flex-start", pointerEvents: "none" }}
+      style={{ justifyContent: align === "left" ? "flex-start" : "flex-end", pointerEvents: "none" }}
     >
       <span
         className="rounded-full px-2 py-0.5"
