@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum PairingStatus {
+  PENDING
+  ACTIVE
+  REVOKED
+}
+
+enum CalendarProvider {
+  GOOGLE
+  APPLE_ICLOUD
+}
+
+enum CalendarSyncMode {
+  FREE_BUSY_ONLY
+  FULL_DETAILS
+}
+
+enum CalendarConnectionStatus {
+  PENDING // stubbed this round -- no OAuth has actually run
+  CONNECTED
+  ERROR
+  REVOKED
+}
+
+enum MeetingStatus {
+  PROPOSED
+  ACCEPTED
+  DECLINED
+  CANCELLED
+}
+
+model User {
+  id              String   @id @default(cuid())
+  displayName     String?
+  deviceTokenHash String   @unique
+  createdAt       DateTime @default(now())
+  lastSeenAt      DateTime @default(now())
+
+  timezoneProfile     TimezoneProfile?
+  calendarConnections CalendarConnection[]
+  pairingsAsA         Pairing[]             @relation("PairingUserA")
+  pairingsAsB         Pairing[]             @relation("PairingUserB")
+  proposedMeetings    Meeting[]             @relation("ProposedBy")
+}
+
+model Pairing {
+  id                  String        @id @default(cuid())
+  inviteCode          String?       @unique
+  inviteCodeExpiresAt DateTime?
+  status              PairingStatus @default(PENDING)
+  userAId             String
+  userA               User          @relation("PairingUserA", fields: [userAId], references: [id])
+  userBId             String?
+  userB               User?         @relation("PairingUserB", fields: [userBId], references: [id])
+  createdAt           DateTime      @default(now())
+  acceptedAt          DateTime?
+
+  meetings Meeting[]
+}
+
+model TimezoneProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id])
+  ianaTimezone String
+  label        String
+  colorHex     String?
+  updatedAt    DateTime @updatedAt
+}
+
+model CalendarConnection {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  provider CalendarProvider
+  syncMode CalendarSyncMode         @default(FREE_BUSY_ONLY)
+  status   CalendarConnectionStatus @default(PENDING)
+
+  externalAccountEmail String?
+
+  // --- STUB FIELDS: no real OAuth this round ---
+  // TODO before storing real tokens: encrypt these at rest (e.g. libsodium sealed box).
+  accessTokenEnc  String?
+  refreshTokenEnc String?
+  tokenExpiresAt  DateTime?
+  scopesGranted   String? // JSON-encoded string[]
+  lastSyncedAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Roadmap cache table -- schema exists now, unused this round (no sync job populates it yet).
+model CalendarBusyBlock {
+  id                   String   @id @default(cuid())
+  calendarConnectionId String
+  externalEventId      String
+  startAt              DateTime
+  endAt                DateTime
+  title                String? // null when syncMode = FREE_BUSY_ONLY
+  createdAt            DateTime @default(now())
+
+  @@unique([calendarConnectionId, externalEventId])
+}
+
+model Meeting {
+  id               String        @id @default(cuid())
+  pairingId        String
+  pairing          Pairing       @relation(fields: [pairingId], references: [id])
+  proposedByUserId String
+  proposedBy       User          @relation("ProposedBy", fields: [proposedByUserId], references: [id])
+  startAt          DateTime
+  endAt            DateTime
+  title            String?
+  notes            String?
+  status           MeetingStatus @default(PROPOSED)
+  syncToCalendar   Boolean       @default(false)
+  reminderOnly     Boolean       @default(true)
+  createdAt        DateTime      @default(now())
+  respondedAt      DateTime?
+}

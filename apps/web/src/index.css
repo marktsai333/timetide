@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-primary: #38bdf8;
+}
+
+:root {
+  color-scheme: dark;
+  --bg: #0b1220;
+  --text: #f1f5f9;
+  --text-muted: #8a97b0;
+  --border: rgba(226, 232, 240, 0.1);
+
+  --rail-self: #38bdf8;
+  --rail-self-soft: rgba(56, 189, 248, 0.14);
+  --rail-partner: #fb923c;
+  --rail-partner-soft: rgba(251, 146, 60, 0.14);
+
+  --now-line: #f8fafc;
+
+  --glass-bg: rgba(11, 18, 32, 0.6);
+  --glass-bg-strong: rgba(17, 25, 43, 0.88);
+  --glass-border: rgba(226, 232, 240, 0.12);
+  --glass-highlight: rgba(255, 255, 255, 0.06);
+
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Text",
+    "Helvetica Neue",
+    system-ui,
+    sans-serif;
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@keyframes dayDividerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes nowIndicatorBreathe {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scaleY(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleY(1.03);
+  }
+}
+
+.now-indicator-pulse {
+  animation: nowIndicatorBreathe 1.8s var(--ease-in-out-strong) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .now-indicator-pulse {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "@timetide/api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -b",
+    "start": "node dist/server.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev"
+  },
+  "dependencies": {
+    "@timetide/shared": "*",
+    "@fastify/cors": "^10.0.1",
+    "@prisma/client": "^6.2.0",
+    "fastify": "^5.2.0",
+    "fastify-plugin": "^5.0.1",
+    "nanoid": "^5.0.9",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "prisma": "^6.2.0",
+    "tsx": "^4.19.2",
+    "typescript": "~6.0.2"
+  }
+}
