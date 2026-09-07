@@ -11,6 +11,8 @@ export function TimeRail({
   align,
   accentVar,
   now,
+  nightStartHour,
+  nightEndHour,
 }: {
   index: number;
   rangeStart: DateTime;
@@ -18,10 +20,13 @@ export function TimeRail({
   align: "left" | "right";
   accentVar: string;
   now: DateTime;
+  nightStartHour: number;
+  nightEndHour: number;
 }) {
   const instant = rowInstantAt(index, rangeStart);
   const showDivider = isLocalDateBoundary(index, rangeStart, profile.ianaTimezone);
-  const isPast = instant < now;
+  // 這一列代表的是「這一整個小時」，要整個小時都過完才算過去 -- 現在所在的那一小時不算過去。
+  const isPast = instant.plus({ hours: 1 }) <= now;
 
   return (
     <div className="relative h-full">
@@ -34,6 +39,8 @@ export function TimeRail({
         align={align}
         accentVar={accentVar}
         isPast={isPast}
+        nightStartHour={nightStartHour}
+        nightEndHour={nightEndHour}
       />
     </div>
   );

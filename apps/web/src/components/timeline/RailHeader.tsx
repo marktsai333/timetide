@@ -8,11 +8,15 @@ export function RailHeader({
   align,
   accentVar,
   onTap,
+  nightStartHour,
+  nightEndHour,
 }: {
   profile: TimezoneProfile;
   align: "left" | "right";
   accentVar: string;
   onTap: () => void;
+  nightStartHour: number;
+  nightEndHour: number;
 }) {
   const [now, setNow] = useState(() => DateTime.utc());
 
@@ -21,7 +25,7 @@ export function RailHeader({
     return () => clearInterval(id);
   }, []);
 
-  const daytime = isDaytime(now, profile.ianaTimezone);
+  const daytime = isDaytime(now, profile.ianaTimezone, nightStartHour, nightEndHour);
 
   return (
     <button

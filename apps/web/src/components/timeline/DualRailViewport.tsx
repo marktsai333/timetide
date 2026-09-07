@@ -42,6 +42,8 @@ export function DualRailViewport({
   partner,
   now,
   topRowIndex,
+  nightStartHour,
+  nightEndHour,
 }: {
   virtualItems: VirtualItem[];
   totalSize: number;
@@ -50,6 +52,8 @@ export function DualRailViewport({
   partner: TimezoneProfile;
   now: DateTime;
   topRowIndex: number;
+  nightStartHour: number;
+  nightEndHour: number;
 }) {
   const topInstant = rowInstantAt(topRowIndex, rangeStart);
 
@@ -84,6 +88,8 @@ export function DualRailViewport({
             align="left"
             accentVar="--rail-self"
             now={now}
+            nightStartHour={nightStartHour}
+            nightEndHour={nightEndHour}
           />
           <div style={{ width: 1, background: "var(--border)" }} />
           <TimeRail
@@ -93,6 +99,8 @@ export function DualRailViewport({
             align="right"
             accentVar="--rail-partner"
             now={now}
+            nightStartHour={nightStartHour}
+            nightEndHour={nightEndHour}
           />
         </div>
       ))}

@@ -63,7 +63,22 @@ export function getUtcOffsetLabel(ianaTimezone: string, at: DateTime): string {
   return offsetPart?.value ?? "";
 }
 
-export function isDaytime(instantUtc: DateTime, ianaTimezone: string): boolean {
+export const DEFAULT_NIGHT_START_HOUR = 0;
+export const DEFAULT_NIGHT_END_HOUR = 12;
+
+/** 支援跨午夜的區間（例如 22 點到 6 點），start === end 代表沒有夜晚。 */
+export function isWithinNightRange(hour: number, nightStartHour: number, nightEndHour: number): boolean {
+  if (nightStartHour === nightEndHour) return false;
+  if (nightStartHour < nightEndHour) return hour >= nightStartHour && hour < nightEndHour;
+  return hour >= nightStartHour || hour < nightEndHour;
+}
+
+export function isDaytime(
+  instantUtc: DateTime,
+  ianaTimezone: string,
+  nightStartHour: number = DEFAULT_NIGHT_START_HOUR,
+  nightEndHour: number = DEFAULT_NIGHT_END_HOUR,
+): boolean {
   const hour = instantUtc.setZone(ianaTimezone).hour;
-  return hour >= 6 && hour < 18;
+  return !isWithinNightRange(hour, nightStartHour, nightEndHour);
 }

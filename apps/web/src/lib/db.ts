@@ -1,10 +1,13 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import type { TimezoneProfile } from "@timetide/shared";
+import { DEFAULT_NIGHT_START_HOUR, DEFAULT_NIGHT_END_HOUR } from "./timezone";
 
 export interface TimelineSettings {
   id: "timezones";
   self: TimezoneProfile | null;
   partner: TimezoneProfile | null;
+  nightStartHour: number;
+  nightEndHour: number;
 }
 
 interface TimeTideDB extends DBSchema {
@@ -35,10 +38,18 @@ export function getDB() {
 export async function loadTimezoneSettings(): Promise<TimelineSettings> {
   const db = await getDB();
   const existing = await db.get("settings", "timezones");
-  return existing ?? { id: "timezones", self: null, partner: null };
+  return (
+    existing ?? {
+      id: "timezones",
+      self: null,
+      partner: null,
+      nightStartHour: DEFAULT_NIGHT_START_HOUR,
+      nightEndHour: DEFAULT_NIGHT_END_HOUR,
+    }
+  );
 }
 
-export async function saveTimezoneSettings(self: TimezoneProfile | null, partner: TimezoneProfile | null) {
+export async function saveTimezoneSettings(settings: Omit<TimelineSettings, "id">) {
   const db = await getDB();
-  await db.put("settings", { id: "timezones", self, partner });
+  await db.put("settings", { id: "timezones", ...settings });
 }

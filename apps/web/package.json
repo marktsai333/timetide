@@ -10,9 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@timetide/shared": "*",
     "@base-ui/react": "^1.7.0",
     "@tanstack/react-virtual": "^3.13.0",
+    "@timetide/shared": "*",
     "idb": "^8.0.3",
     "luxon": "^3.5.0",
     "motion": "^13.2.0",

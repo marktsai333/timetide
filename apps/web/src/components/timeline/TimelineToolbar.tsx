@@ -1,4 +1,10 @@
-export function TimelineToolbar({ onJumpToNow }: { onJumpToNow: () => void }) {
+export function TimelineToolbar({
+  onJumpToNow,
+  onOpenNightSettings,
+}: {
+  onJumpToNow: () => void;
+  onOpenNightSettings: () => void;
+}) {
   return (
     <div
       className="sticky top-0 z-10 flex items-center justify-between px-4"
@@ -11,13 +17,23 @@ export function TimelineToolbar({ onJumpToNow }: { onJumpToNow: () => void }) {
       }}
     >
       <span style={{ fontSize: 17, fontWeight: 700 }}>TimeTide</span>
-      <button
-        onClick={onJumpToNow}
-        className="rounded-full px-3 py-1.5"
-        style={{ fontSize: 13, fontWeight: 600, background: "var(--glass-bg-strong)", border: "1px solid var(--glass-border)" }}
-      >
-        現在
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onOpenNightSettings}
+          className="rounded-full px-3 py-1.5"
+          style={{ fontSize: 13, background: "var(--glass-bg-strong)", border: "1px solid var(--glass-border)" }}
+          aria-label="夜晚時段設定"
+        >
+          🌙
+        </button>
+        <button
+          onClick={onJumpToNow}
+          className="rounded-full px-3 py-1.5"
+          style={{ fontSize: 13, fontWeight: 600, background: "var(--glass-bg-strong)", border: "1px solid var(--glass-border)" }}
+        >
+          現在
+        </button>
+      </div>
     </div>
   );
 }

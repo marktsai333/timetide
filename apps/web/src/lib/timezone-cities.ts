@@ -21,7 +21,7 @@ export const TIMEZONE_CITIES: TimezoneCity[] = [
   { ianaTimezone: "Europe/Amsterdam", label: "阿姆斯特丹", region: "歐洲" },
   { ianaTimezone: "America/New_York", label: "紐約", region: "北美洲" },
   { ianaTimezone: "America/Chicago", label: "芝加哥", region: "北美洲" },
-  { ianaTimezone: "America/Chicago", label: "密爾瓦基（威斯康辛）", region: "北美洲" },
+  { ianaTimezone: "America/Chicago", label: "密爾瓦基", region: "北美洲" },
   { ianaTimezone: "America/Denver", label: "丹佛", region: "北美洲" },
   { ianaTimezone: "America/Los_Angeles", label: "洛杉磯", region: "北美洲" },
   { ianaTimezone: "America/Toronto", label: "多倫多", region: "北美洲" },

@@ -9,15 +9,20 @@ import { TimelineToolbar } from "../components/timeline/TimelineToolbar";
 import { RailHeader } from "../components/timeline/RailHeader";
 import { DualRailViewport } from "../components/timeline/DualRailViewport";
 import { TimezonePicker } from "../components/timeline/TimezonePicker";
+import { NightHoursSheet } from "../components/timeline/NightHoursSheet";
 import type { TimezoneCity } from "../lib/timezone-cities";
 import { useTimelineStore } from "../state/useTimelineStore";
 
 export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partner: TimezoneProfile }) {
   const setSelf = useTimelineStore((s) => s.setSelf);
   const setPartner = useTimelineStore((s) => s.setPartner);
+  const nightStartHour = useTimelineStore((s) => s.nightStartHour);
+  const nightEndHour = useTimelineStore((s) => s.nightEndHour);
+  const setNightHours = useTimelineStore((s) => s.setNightHours);
   const parentRef = useRef<HTMLDivElement>(null);
   const rangeStart = useMemo(() => getRangeStart(DateTime.utc()), []);
   const [editing, setEditing] = useState<"self" | "partner" | null>(null);
+  const [nightSettingsOpen, setNightSettingsOpen] = useState(false);
   const now = useNowTick();
 
   const virtualizer = useVirtualizer({
@@ -49,11 +54,25 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
 
   return (
     <div className="h-full flex flex-col">
-      <TimelineToolbar onJumpToNow={() => scrollToNow()} />
+      <TimelineToolbar onJumpToNow={() => scrollToNow()} onOpenNightSettings={() => setNightSettingsOpen(true)} />
       <div className="grid grid-cols-[1fr_auto_1fr]" style={{ borderBottom: "1px solid var(--glass-border)" }}>
-        <RailHeader profile={self} align="left" accentVar="--rail-self" onTap={() => setEditing("self")} />
+        <RailHeader
+          profile={self}
+          align="left"
+          accentVar="--rail-self"
+          onTap={() => setEditing("self")}
+          nightStartHour={nightStartHour}
+          nightEndHour={nightEndHour}
+        />
         <div style={{ width: 1 }} />
-        <RailHeader profile={partner} align="right" accentVar="--rail-partner" onTap={() => setEditing("partner")} />
+        <RailHeader
+          profile={partner}
+          align="right"
+          accentVar="--rail-partner"
+          onTap={() => setEditing("partner")}
+          nightStartHour={nightStartHour}
+          nightEndHour={nightEndHour}
+        />
       </div>
       <div ref={parentRef} className="flex-1 overflow-y-auto" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <DualRailViewport
@@ -64,6 +83,8 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
           partner={partner}
           now={now}
           topRowIndex={topRowIndex}
+          nightStartHour={nightStartHour}
+          nightEndHour={nightEndHour}
         />
       </div>
       <TimezonePicker
@@ -71,6 +92,13 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
         onOpenChange={(open) => !open && setEditing(null)}
         title={editing === "self" ? "我在哪裡？" : "對方在哪裡？"}
         onSelect={(city) => editing && handleCitySelect(editing, city)}
+      />
+      <NightHoursSheet
+        open={nightSettingsOpen}
+        onOpenChange={setNightSettingsOpen}
+        nightStartHour={nightStartHour}
+        nightEndHour={nightEndHour}
+        onChange={setNightHours}
       />
     </div>
   );
