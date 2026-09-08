@@ -128,6 +128,7 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
           nightStartHour={nightStartHour}
           nightEndHour={nightEndHour}
           meetings={paired ? meetings : []}
+          myUid={myUid}
           onCreateMeeting={(instant) => {
             if (!paired) return;
             setCreateMeetingAt(instant);

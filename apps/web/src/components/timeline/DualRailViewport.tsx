@@ -47,6 +47,7 @@ export function DualRailViewport({
   nightStartHour,
   nightEndHour,
   meetings,
+  myUid,
   onCreateMeeting,
   onSelectMeeting,
 }: {
@@ -60,6 +61,7 @@ export function DualRailViewport({
   nightStartHour: number;
   nightEndHour: number;
   meetings: MeetingWithId[];
+  myUid: string | null;
   onCreateMeeting: (instant: DateTime) => void;
   onSelectMeeting: (meetingId: string) => void;
 }) {
@@ -84,7 +86,13 @@ export function DualRailViewport({
       </div>
       <NowIndicator rangeStart={rangeStart} now={now} />
       {meetings.map((meeting) => (
-        <MeetingBlock key={meeting.id} meeting={meeting} rangeStart={rangeStart} onSelect={onSelectMeeting} />
+        <MeetingBlock
+          key={meeting.id}
+          meeting={meeting}
+          rangeStart={rangeStart}
+          myUid={myUid}
+          onSelect={onSelectMeeting}
+        />
       ))}
       {virtualItems.map((item) => (
         <div
