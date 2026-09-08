@@ -10,10 +10,15 @@ export interface TimelineSettings {
   nightEndHour: number;
 }
 
+export interface PairingSettings {
+  id: "pairing";
+  pairingId: string;
+}
+
 interface TimeTideDB extends DBSchema {
   settings: {
     key: string;
-    value: TimelineSettings;
+    value: TimelineSettings | PairingSettings;
   };
 }
 
@@ -39,7 +44,7 @@ export async function loadTimezoneSettings(): Promise<TimelineSettings> {
   const db = await getDB();
   const existing = await db.get("settings", "timezones");
   return (
-    existing ?? {
+    (existing?.id === "timezones" ? existing : undefined) ?? {
       id: "timezones",
       self: null,
       partner: null,
@@ -52,4 +57,15 @@ export async function loadTimezoneSettings(): Promise<TimelineSettings> {
 export async function saveTimezoneSettings(settings: Omit<TimelineSettings, "id">) {
   const db = await getDB();
   await db.put("settings", { id: "timezones", ...settings });
+}
+
+export async function loadPairingId(): Promise<string | null> {
+  const db = await getDB();
+  const existing = await db.get("settings", "pairing");
+  return existing && "pairingId" in existing ? existing.pairingId : null;
+}
+
+export async function savePairingId(pairingId: string) {
+  const db = await getDB();
+  await db.put("settings", { id: "pairing", pairingId });
 }

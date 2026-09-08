@@ -24,3 +24,6 @@ dist-ssr
 apps/api/prisma/dev.db
 apps/api/prisma/dev.db-journal
 apps/api/.env
+
+# Firebase
+apps/web/.env

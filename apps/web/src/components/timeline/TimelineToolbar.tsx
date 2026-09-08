@@ -1,9 +1,15 @@
 export function TimelineToolbar({
   onJumpToNow,
   onOpenNightSettings,
+  onOpenPairing,
+  onOpenMeeting,
+  paired,
 }: {
   onJumpToNow: () => void;
   onOpenNightSettings: () => void;
+  onOpenPairing: () => void;
+  onOpenMeeting: () => void;
+  paired: boolean;
 }) {
   return (
     <div
@@ -18,6 +24,24 @@ export function TimelineToolbar({
     >
       <span style={{ fontSize: 17, fontWeight: 700 }}>TimeTide</span>
       <div className="flex items-center gap-2">
+        {paired && (
+          <button
+            onClick={onOpenMeeting}
+            className="rounded-full px-3 py-1.5"
+            style={{ fontSize: 13, background: "var(--glass-bg-strong)", border: "1px solid var(--glass-border)" }}
+            aria-label="約定時間"
+          >
+            📅
+          </button>
+        )}
+        <button
+          onClick={onOpenPairing}
+          className="rounded-full px-3 py-1.5"
+          style={{ fontSize: 13, background: "var(--glass-bg-strong)", border: "1px solid var(--glass-border)" }}
+          aria-label="配對"
+        >
+          {paired ? "🔗" : "👥"}
+        </button>
         <button
           onClick={onOpenNightSettings}
           className="rounded-full px-3 py-1.5"

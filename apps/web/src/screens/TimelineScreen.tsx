@@ -10,8 +10,11 @@ import { RailHeader } from "../components/timeline/RailHeader";
 import { DualRailViewport } from "../components/timeline/DualRailViewport";
 import { TimezonePicker } from "../components/timeline/TimezonePicker";
 import { NightHoursSheet } from "../components/timeline/NightHoursSheet";
+import { PairingSheet } from "../components/pairing/PairingSheet";
+import { MeetingSheet } from "../components/pairing/MeetingSheet";
 import type { TimezoneCity } from "../lib/timezone-cities";
 import { useTimelineStore } from "../state/useTimelineStore";
+import { usePairingStore } from "../state/usePairingStore";
 
 export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partner: TimezoneProfile }) {
   const setSelf = useTimelineStore((s) => s.setSelf);
@@ -23,7 +26,15 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
   const rangeStart = useMemo(() => getRangeStart(DateTime.utc()), []);
   const [editing, setEditing] = useState<"self" | "partner" | null>(null);
   const [nightSettingsOpen, setNightSettingsOpen] = useState(false);
+  const [pairingOpen, setPairingOpen] = useState(false);
+  const [meetingOpen, setMeetingOpen] = useState(false);
   const now = useNowTick();
+  const hydratePairing = usePairingStore((s) => s.hydrate);
+  const paired = usePairingStore((s) => s.memberUids.length >= 2);
+
+  useEffect(() => {
+    void hydratePairing();
+  }, [hydratePairing]);
 
   const virtualizer = useVirtualizer({
     count: TOTAL_HOURS,
@@ -54,7 +65,13 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
 
   return (
     <div className="h-full flex flex-col">
-      <TimelineToolbar onJumpToNow={() => scrollToNow()} onOpenNightSettings={() => setNightSettingsOpen(true)} />
+      <TimelineToolbar
+        onJumpToNow={() => scrollToNow()}
+        onOpenNightSettings={() => setNightSettingsOpen(true)}
+        onOpenPairing={() => setPairingOpen(true)}
+        onOpenMeeting={() => setMeetingOpen(true)}
+        paired={paired}
+      />
       <div className="grid grid-cols-[1fr_auto_1fr]" style={{ borderBottom: "1px solid var(--glass-border)" }}>
         <RailHeader
           profile={self}
@@ -100,6 +117,8 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
         nightEndHour={nightEndHour}
         onChange={setNightHours}
       />
+      <PairingSheet open={pairingOpen} onOpenChange={setPairingOpen} />
+      <MeetingSheet open={meetingOpen} onOpenChange={setMeetingOpen} />
     </div>
   );
 }
