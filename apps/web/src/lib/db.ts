@@ -69,3 +69,8 @@ export async function savePairingId(pairingId: string) {
   const db = await getDB();
   await db.put("settings", { id: "pairing", pairingId });
 }
+
+export async function clearPairingId() {
+  const db = await getDB();
+  await db.delete("settings", "pairing");
+}

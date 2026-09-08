@@ -11,8 +11,18 @@ export function PairingSheet({ open, onOpenChange }: { open: boolean; onOpenChan
   const [copied, setCopied] = useState(false);
   const createInviteCode = usePairingStore((s) => s.createInviteCode);
   const redeemInviteCode = usePairingStore((s) => s.redeemInviteCode);
+  const leavePairing = usePairingStore((s) => s.leavePairing);
   const memberUids = usePairingStore((s) => s.memberUids);
   const paired = memberUids.length >= 2;
+
+  async function handleLeave() {
+    setBusy(true);
+    try {
+      await leavePairing();
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function handleCreate() {
     setBusy(true);
@@ -69,6 +79,17 @@ export function PairingSheet({ open, onOpenChange }: { open: boolean; onOpenChan
     return (
       <Sheet open={open} onOpenChange={onOpenChange} title="配對狀態">
         <p style={{ fontSize: 14, color: "var(--text-muted)" }}>已經跟對方配對成功 🎉</p>
+        <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 12 }}>
+          如果對方斷線、換裝置，或想重新配對，可以在這裡解除配對後重新產生邀請碼。
+        </p>
+        <button
+          onClick={handleLeave}
+          disabled={busy}
+          className="w-full rounded-full py-2.5 mt-3"
+          style={{ fontSize: 14, fontWeight: 600, background: "var(--glass-bg-strong)", color: "#ff6b6b" }}
+        >
+          {busy ? "處理中…" : "解除配對"}
+        </button>
       </Sheet>
     );
   }

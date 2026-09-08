@@ -1,7 +1,9 @@
 import {
   addDoc,
+  arrayRemove,
   arrayUnion,
   collection,
+  deleteField,
   doc,
   getDoc,
   onSnapshot,
@@ -81,6 +83,13 @@ export async function redeemInvite(uid: string, inviteCode: string) {
   });
 
   return { pairingId: invite.pairingId as string };
+}
+
+export async function leavePairing(pairingId: string, uid: string) {
+  await updateDoc(doc(db, "pairings", pairingId), { memberUids: arrayRemove(uid) });
+  await updateDoc(doc(db, "users", uid), { pairingId: deleteField() }).catch(() => {
+    // users/{uid} may not exist yet -- leaving is still valid even if this is a no-op.
+  });
 }
 
 export function subscribeToPairing(pairingId: string, cb: (data: PairingData | null) => void) {

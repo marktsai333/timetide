@@ -32,16 +32,17 @@ export function MeetingBlock({
     return (
       <div
         onClick={handleClick}
-        className="absolute rounded-full px-3 py-1 flex items-center justify-center cursor-pointer"
+        className="absolute rounded-full px-5 py-1.5 flex items-center justify-center cursor-pointer"
         style={{
-          top: top + height / 2 - 12,
+          top: top + height / 2 - 14,
           left: "50%",
           transform: "translateX(-50%)",
-          height: 24,
+          height: 28,
+          minWidth: 96,
           zIndex: 3,
           background: "var(--meeting-accent)",
           boxShadow: "0 1px 6px rgba(0,0,0,0.4)",
-          maxWidth: "70%",
+          maxWidth: "85%",
         }}
       >
         <span

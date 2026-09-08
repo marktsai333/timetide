@@ -1,10 +1,11 @@
 import { create } from "zustand";
 import { getUid } from "../lib/firebase";
-import { loadPairingId, savePairingId } from "../lib/db";
+import { clearPairingId, loadPairingId, savePairingId } from "../lib/db";
 import {
   cancelMeetingDoc,
   createInvite,
   createMeeting as createMeetingApi,
+  leavePairing as leavePairingApi,
   redeemInvite,
   respondToMeetingDoc,
   subscribeToMeetings,
@@ -24,6 +25,7 @@ interface PairingState {
   createMeeting: (meeting: { startAt: string; endAt: string; title?: string; notes?: string }) => Promise<void>;
   respondToMeeting: (meetingId: string, status: "confirmed" | "declined") => Promise<void>;
   deleteMeeting: (meetingId: string) => Promise<void>;
+  leavePairing: () => Promise<void>;
 }
 
 let unsubscribePairing: (() => void) | null = null;
@@ -97,6 +99,21 @@ export const usePairingStore = create<PairingState>((set, get) => {
       if (!pairingId) return;
       const uid = await getUid();
       await cancelMeetingDoc(pairingId, meetingId, uid);
+    },
+    async leavePairing() {
+      const { pairingId } = get();
+      if (!pairingId) return;
+      const uid = await getUid();
+      try {
+        await leavePairingApi(pairingId, uid);
+      } finally {
+        unsubscribePairing?.();
+        unsubscribeMeetings?.();
+        unsubscribePairing = null;
+        unsubscribeMeetings = null;
+        await clearPairingId();
+        set({ pairingId: null, memberUids: [], meetings: [], status: "idle", error: null });
+      }
     },
   };
 });

@@ -13,7 +13,7 @@ export function NowIndicator({ rangeStart, now }: { rangeStart: DateTime; now: D
         background: "var(--now-line)",
         boxShadow: "0 0 8px var(--now-line)",
         pointerEvents: "none",
-        zIndex: 5,
+        zIndex: 8,
       }}
     />
   );
