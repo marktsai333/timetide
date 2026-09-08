@@ -57,8 +57,9 @@ export function PairingSheet({ open, onOpenChange }: { open: boolean; onOpenChan
           style={{
             fontSize: 13,
             fontWeight: 600,
-            background: tab === "create" ? "var(--rail-self)" : "var(--glass-bg-strong)",
-            color: tab === "create" ? "#031018" : "var(--text)",
+            background: "var(--glass-bg-strong)",
+            border: tab === "create" ? "1px solid var(--rail-self)" : "1px solid transparent",
+            color: tab === "create" ? "var(--rail-self)" : "var(--text-muted)",
           }}
         >
           產生邀請碼
@@ -69,8 +70,9 @@ export function PairingSheet({ open, onOpenChange }: { open: boolean; onOpenChan
           style={{
             fontSize: 13,
             fontWeight: 600,
-            background: tab === "redeem" ? "var(--rail-self)" : "var(--glass-bg-strong)",
-            color: tab === "redeem" ? "#031018" : "var(--text)",
+            background: "var(--glass-bg-strong)",
+            border: tab === "redeem" ? "1px solid var(--rail-self)" : "1px solid transparent",
+            color: tab === "redeem" ? "var(--rail-self)" : "var(--text-muted)",
           }}
         >
           輸入邀請碼
