@@ -25,7 +25,7 @@ export function TimezonePicker({
             <div className="flex flex-col">
               {TIMEZONE_CITIES.filter((city) => city.region === region).map((city) => (
                 <button
-                  key={city.ianaTimezone}
+                  key={city.label}
                   onClick={() => {
                     onSelect(city);
                     onOpenChange(false);

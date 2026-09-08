@@ -1,9 +1,12 @@
 import {
+  addDoc,
   arrayUnion,
   collection,
   doc,
   getDoc,
   onSnapshot,
+  orderBy,
+  query,
   runTransaction,
   serverTimestamp,
   setDoc,
@@ -21,9 +24,12 @@ export interface MeetingData {
   createdAt: string;
 }
 
+export interface MeetingWithId extends MeetingData {
+  id: string;
+}
+
 export interface PairingData {
   memberUids: string[];
-  meeting: MeetingData | null;
 }
 
 const INVITE_TTL_MINUTES = 15;
@@ -37,7 +43,7 @@ function generateInviteCode(): string {
 
 export async function createInvite(uid: string) {
   const pairingRef = doc(collection(db, "pairings"));
-  await setDoc(pairingRef, { memberUids: [uid], createdAt: serverTimestamp(), meeting: null });
+  await setDoc(pairingRef, { memberUids: [uid], createdAt: serverTimestamp() });
 
   const inviteCode = generateInviteCode();
   const expiresAt = new Date(Date.now() + INVITE_TTL_MINUTES * 60_000).toISOString();
@@ -83,11 +89,11 @@ export function subscribeToPairing(pairingId: string, cb: (data: PairingData | n
       return;
     }
     const data = snap.data();
-    cb({ memberUids: data.memberUids ?? [], meeting: data.meeting ?? null });
+    cb({ memberUids: data.memberUids ?? [] });
   });
 }
 
-export async function proposeMeeting(
+export async function createMeeting(
   pairingId: string,
   uid: string,
   meeting: { startAt: string; endAt: string; title?: string; notes?: string },
@@ -98,9 +104,16 @@ export async function proposeMeeting(
     status: "proposed",
     createdAt: new Date().toISOString(),
   };
-  await updateDoc(doc(db, "pairings", pairingId), { meeting: data });
+  await addDoc(collection(db, "pairings", pairingId, "meetings"), data);
 }
 
-export async function respondToMeeting(pairingId: string, status: "confirmed" | "declined") {
-  await updateDoc(doc(db, "pairings", pairingId), { "meeting.status": status });
+export async function respondToMeetingDoc(pairingId: string, meetingId: string, status: "confirmed" | "declined") {
+  await updateDoc(doc(db, "pairings", pairingId, "meetings", meetingId), { status });
+}
+
+export function subscribeToMeetings(pairingId: string, cb: (meetings: MeetingWithId[]) => void) {
+  const meetingsQuery = query(collection(db, "pairings", pairingId, "meetings"), orderBy("startAt"));
+  return onSnapshot(meetingsQuery, (snap) => {
+    cb(snap.docs.map((d) => ({ id: d.id, ...(d.data() as MeetingData) })));
+  });
 }

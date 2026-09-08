@@ -12,9 +12,11 @@ import { TimezonePicker } from "../components/timeline/TimezonePicker";
 import { NightHoursSheet } from "../components/timeline/NightHoursSheet";
 import { PairingSheet } from "../components/pairing/PairingSheet";
 import { MeetingSheet } from "../components/pairing/MeetingSheet";
+import { CreateMeetingSheet } from "../components/pairing/CreateMeetingSheet";
 import type { TimezoneCity } from "../lib/timezone-cities";
 import { useTimelineStore } from "../state/useTimelineStore";
 import { usePairingStore } from "../state/usePairingStore";
+import { getUid } from "../lib/firebase";
 
 export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partner: TimezoneProfile }) {
   const setSelf = useTimelineStore((s) => s.setSelf);
@@ -27,14 +29,34 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
   const [editing, setEditing] = useState<"self" | "partner" | null>(null);
   const [nightSettingsOpen, setNightSettingsOpen] = useState(false);
   const [pairingOpen, setPairingOpen] = useState(false);
-  const [meetingOpen, setMeetingOpen] = useState(false);
+  const [createMeetingOpen, setCreateMeetingOpen] = useState(false);
+  const [createMeetingAt, setCreateMeetingAt] = useState<DateTime | null>(null);
+  const [detailMeetingId, setDetailMeetingId] = useState<string | null>(null);
+  const [myUid, setMyUid] = useState<string | null>(null);
   const now = useNowTick();
   const hydratePairing = usePairingStore((s) => s.hydrate);
   const paired = usePairingStore((s) => s.memberUids.length >= 2);
+  const meetings = usePairingStore((s) => s.meetings);
+  const seenProposalIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     void hydratePairing();
+    void getUid().then(setMyUid);
   }, [hydratePairing]);
+
+  useEffect(() => {
+    if (!myUid) return;
+    for (const meeting of meetings) {
+      if (
+        meeting.status === "proposed" &&
+        meeting.proposedByUid !== myUid &&
+        !seenProposalIds.current.has(meeting.id)
+      ) {
+        seenProposalIds.current.add(meeting.id);
+        setDetailMeetingId(meeting.id);
+      }
+    }
+  }, [meetings, myUid]);
 
   const virtualizer = useVirtualizer({
     count: TOTAL_HOURS,
@@ -69,7 +91,10 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
         onJumpToNow={() => scrollToNow()}
         onOpenNightSettings={() => setNightSettingsOpen(true)}
         onOpenPairing={() => setPairingOpen(true)}
-        onOpenMeeting={() => setMeetingOpen(true)}
+        onOpenMeeting={() => {
+          setCreateMeetingAt(null);
+          setCreateMeetingOpen(true);
+        }}
         paired={paired}
       />
       <div className="grid grid-cols-[1fr_auto_1fr]" style={{ borderBottom: "1px solid var(--glass-border)" }}>
@@ -102,6 +127,13 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
           topRowIndex={topRowIndex}
           nightStartHour={nightStartHour}
           nightEndHour={nightEndHour}
+          meetings={paired ? meetings : []}
+          onCreateMeeting={(instant) => {
+            if (!paired) return;
+            setCreateMeetingAt(instant);
+            setCreateMeetingOpen(true);
+          }}
+          onSelectMeeting={(meetingId) => setDetailMeetingId(meetingId)}
         />
       </div>
       <TimezonePicker
@@ -118,7 +150,12 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
         onChange={setNightHours}
       />
       <PairingSheet open={pairingOpen} onOpenChange={setPairingOpen} />
-      <MeetingSheet open={meetingOpen} onOpenChange={setMeetingOpen} />
+      <CreateMeetingSheet open={createMeetingOpen} onOpenChange={setCreateMeetingOpen} initialStart={createMeetingAt} />
+      <MeetingSheet
+        open={detailMeetingId !== null}
+        onOpenChange={(open) => !open && setDetailMeetingId(null)}
+        meetingId={detailMeetingId}
+      />
     </div>
   );
 }

@@ -3,40 +3,46 @@ import { getUid } from "../lib/firebase";
 import { loadPairingId, savePairingId } from "../lib/db";
 import {
   createInvite,
-  proposeMeeting as proposeMeetingApi,
+  createMeeting as createMeetingApi,
   redeemInvite,
-  respondToMeeting as respondToMeetingApi,
+  respondToMeetingDoc,
+  subscribeToMeetings,
   subscribeToPairing,
-  type MeetingData,
+  type MeetingWithId,
 } from "../lib/pairing";
 
 interface PairingState {
   pairingId: string | null;
   memberUids: string[];
-  meeting: MeetingData | null;
+  meetings: MeetingWithId[];
   status: "idle" | "loading" | "paired" | "error";
   error: string | null;
   hydrate: () => Promise<void>;
   createInviteCode: () => Promise<{ inviteCode: string; expiresAt: string }>;
   redeemInviteCode: (code: string) => Promise<void>;
-  proposeMeeting: (meeting: { startAt: string; endAt: string; title?: string; notes?: string }) => Promise<void>;
-  respondToMeeting: (status: "confirmed" | "declined") => Promise<void>;
+  createMeeting: (meeting: { startAt: string; endAt: string; title?: string; notes?: string }) => Promise<void>;
+  respondToMeeting: (meetingId: string, status: "confirmed" | "declined") => Promise<void>;
 }
 
-let unsubscribe: (() => void) | null = null;
+let unsubscribePairing: (() => void) | null = null;
+let unsubscribeMeetings: (() => void) | null = null;
 
 export const usePairingStore = create<PairingState>((set, get) => {
   function subscribe(pairingId: string) {
-    unsubscribe?.();
-    unsubscribe = subscribeToPairing(pairingId, (data) => {
-      set({ memberUids: data?.memberUids ?? [], meeting: data?.meeting ?? null });
+    unsubscribePairing?.();
+    unsubscribeMeetings?.();
+    unsubscribePairing = subscribeToPairing(pairingId, (data) => {
+      set({ memberUids: data?.memberUids ?? [] });
+    });
+    unsubscribeMeetings = subscribeToMeetings(pairingId, (meetings) => {
+      set({ meetings });
     });
   }
 
   return {
     pairingId: null,
     memberUids: [],
-    meeting: null,
+    meetings: [],
     status: "idle",
     error: null,
     async hydrate() {
@@ -73,16 +79,16 @@ export const usePairingStore = create<PairingState>((set, get) => {
         throw e;
       }
     },
-    async proposeMeeting(meeting) {
+    async createMeeting(meeting) {
       const { pairingId } = get();
       if (!pairingId) return;
       const uid = await getUid();
-      await proposeMeetingApi(pairingId, uid, meeting);
+      await createMeetingApi(pairingId, uid, meeting);
     },
-    async respondToMeeting(status) {
+    async respondToMeeting(meetingId, status) {
       const { pairingId } = get();
       if (!pairingId) return;
-      await respondToMeetingApi(pairingId, status);
+      await respondToMeetingDoc(pairingId, meetingId, status);
     },
   };
 });

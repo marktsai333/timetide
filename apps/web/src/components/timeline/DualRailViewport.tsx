@@ -3,8 +3,10 @@ import type { VirtualItem } from "@tanstack/react-virtual";
 import type { TimezoneProfile } from "@timetide/shared";
 import { rowInstantAt } from "../../lib/rows";
 import { formatDayLabel } from "../../lib/timezone";
+import type { MeetingWithId } from "../../lib/pairing";
 import { TimeRail } from "./TimeRail";
 import { NowIndicator } from "./NowIndicator";
+import { MeetingBlock } from "./MeetingBlock";
 
 function StickyDateBadge({
   label,
@@ -44,6 +46,9 @@ export function DualRailViewport({
   topRowIndex,
   nightStartHour,
   nightEndHour,
+  meetings,
+  onCreateMeeting,
+  onSelectMeeting,
 }: {
   virtualItems: VirtualItem[];
   totalSize: number;
@@ -54,6 +59,9 @@ export function DualRailViewport({
   topRowIndex: number;
   nightStartHour: number;
   nightEndHour: number;
+  meetings: MeetingWithId[];
+  onCreateMeeting: (instant: DateTime) => void;
+  onSelectMeeting: (meetingId: string) => void;
 }) {
   const topInstant = rowInstantAt(topRowIndex, rangeStart);
 
@@ -75,10 +83,19 @@ export function DualRailViewport({
         </div>
       </div>
       <NowIndicator rangeStart={rangeStart} now={now} />
+      {meetings.map((meeting) => (
+        <MeetingBlock key={meeting.id} meeting={meeting} rangeStart={rangeStart} onSelect={onSelectMeeting} />
+      ))}
       {virtualItems.map((item) => (
         <div
           key={item.key}
-          className="absolute left-0 right-0 grid grid-cols-[1fr_auto_1fr]"
+          onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const offsetY = e.clientY - rect.top;
+            const rowInstant = rowInstantAt(item.index, rangeStart);
+            onCreateMeeting(offsetY > item.size / 2 ? rowInstant.plus({ minutes: 30 }) : rowInstant);
+          }}
+          className="absolute left-0 right-0 grid grid-cols-[1fr_auto_1fr] cursor-pointer"
           style={{ top: item.start, height: item.size }}
         >
           <TimeRail

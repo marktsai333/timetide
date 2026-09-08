@@ -8,6 +8,7 @@ export function PairingSheet({ open, onOpenChange }: { open: boolean; onOpenChan
   const [redeemInput, setRedeemInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const createInviteCode = usePairingStore((s) => s.createInviteCode);
   const redeemInviteCode = usePairingStore((s) => s.redeemInviteCode);
   const memberUids = usePairingStore((s) => s.memberUids);
@@ -24,6 +25,30 @@ export function PairingSheet({ open, onOpenChange }: { open: boolean; onOpenChan
     } finally {
       setBusy(false);
     }
+  }
+
+  async function handleCopy() {
+    if (!inviteCode) return;
+    try {
+      if (!navigator.clipboard) throw new Error("clipboard API unavailable");
+      await navigator.clipboard.writeText(inviteCode);
+    } catch {
+      const textarea = document.createElement("textarea");
+      textarea.value = inviteCode;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      try {
+        document.execCommand("copy");
+      } catch {
+        // give up silently -- the code is still visible on screen for manual copy
+      }
+      document.body.removeChild(textarea);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   }
 
   async function handleRedeem() {
@@ -91,11 +116,11 @@ export function PairingSheet({ open, onOpenChange }: { open: boolean; onOpenChan
                 {inviteCode}
               </div>
               <button
-                onClick={() => navigator.clipboard?.writeText(inviteCode)}
+                onClick={handleCopy}
                 className="rounded-full py-2.5"
                 style={{ fontSize: 14, fontWeight: 600, background: "var(--glass-bg-strong)" }}
               >
-                複製代碼
+                {copied ? "已複製 ✓" : "複製代碼"}
               </button>
             </>
           ) : (
