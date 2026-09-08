@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useTimelineStore } from "./state/useTimelineStore";
 import { OnboardingFlow } from "./screens/OnboardingFlow";
 import { TimelineScreen } from "./screens/TimelineScreen";
+import { UpdatePrompt } from "./components/UpdatePrompt";
 
 export default function App() {
   const { self, partner, hydrated, hydrate } = useTimelineStore();
@@ -14,9 +15,10 @@ export default function App() {
     return <div className="h-full" />;
   }
 
-  if (!self || !partner) {
-    return <OnboardingFlow />;
-  }
-
-  return <TimelineScreen self={self} partner={partner} />;
+  return (
+    <>
+      {!self || !partner ? <OnboardingFlow /> : <TimelineScreen self={self} partner={partner} />}
+      <UpdatePrompt />
+    </>
+  );
 }
