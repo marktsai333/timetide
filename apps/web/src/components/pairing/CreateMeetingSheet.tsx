@@ -29,7 +29,7 @@ export function CreateMeetingSheet({
     try {
       const startAt = start.toUTC().toISO()!;
       const endAt = start.plus({ minutes: 30 }).toUTC().toISO()!;
-      await createMeeting({ startAt, endAt, title: title || undefined });
+      await createMeeting({ startAt, endAt, title: title.trim() || "打電話" });
       onOpenChange(false);
     } finally {
       setBusy(false);
@@ -80,7 +80,7 @@ export function CreateMeetingSheet({
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="標題（選填）"
+          placeholder="標題（選填，預設「打電話」）"
           className="rounded-2xl px-4 py-3"
           style={{ background: "var(--glass-bg-strong)", fontSize: 15 }}
         />

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { getUid } from "../lib/firebase";
 import { loadPairingId, savePairingId } from "../lib/db";
 import {
+  cancelMeetingDoc,
   createInvite,
   createMeeting as createMeetingApi,
   redeemInvite,
@@ -22,6 +23,7 @@ interface PairingState {
   redeemInviteCode: (code: string) => Promise<void>;
   createMeeting: (meeting: { startAt: string; endAt: string; title?: string; notes?: string }) => Promise<void>;
   respondToMeeting: (meetingId: string, status: "confirmed" | "declined") => Promise<void>;
+  deleteMeeting: (meetingId: string) => Promise<void>;
 }
 
 let unsubscribePairing: (() => void) | null = null;
@@ -89,6 +91,12 @@ export const usePairingStore = create<PairingState>((set, get) => {
       const { pairingId } = get();
       if (!pairingId) return;
       await respondToMeetingDoc(pairingId, meetingId, status);
+    },
+    async deleteMeeting(meetingId) {
+      const { pairingId } = get();
+      if (!pairingId) return;
+      const uid = await getUid();
+      await cancelMeetingDoc(pairingId, meetingId, uid);
     },
   };
 });

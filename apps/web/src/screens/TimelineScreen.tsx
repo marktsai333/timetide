@@ -37,7 +37,11 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
   const hydratePairing = usePairingStore((s) => s.hydrate);
   const paired = usePairingStore((s) => s.memberUids.length >= 2);
   const meetings = usePairingStore((s) => s.meetings);
-  const seenProposalIds = useRef<Set<string>>(new Set());
+  const visibleMeetings = useMemo(
+    () => meetings.filter((m) => m.status === "proposed" || m.status === "confirmed"),
+    [meetings],
+  );
+  const prevStatusRef = useRef<Map<string, string> | null>(null);
 
   useEffect(() => {
     void hydratePairing();
@@ -46,15 +50,21 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
 
   useEffect(() => {
     if (!myUid) return;
+    if (prevStatusRef.current === null) {
+      // First load: record the current state without popping up for pre-existing meetings.
+      prevStatusRef.current = new Map(meetings.map((m) => [m.id, m.status]));
+      return;
+    }
     for (const meeting of meetings) {
-      if (
-        meeting.status === "proposed" &&
-        meeting.proposedByUid !== myUid &&
-        !seenProposalIds.current.has(meeting.id)
-      ) {
-        seenProposalIds.current.add(meeting.id);
+      const prevStatus = prevStatusRef.current.get(meeting.id);
+      if (prevStatus === meeting.status) continue;
+      const isNewProposal = prevStatus === undefined && meeting.status === "proposed" && meeting.proposedByUid !== myUid;
+      const isCancelledByOther =
+        meeting.status === "cancelled" && meeting.cancelledByUid !== myUid && prevStatus !== "cancelled";
+      if (isNewProposal || isCancelledByOther) {
         setDetailMeetingId(meeting.id);
       }
+      prevStatusRef.current.set(meeting.id, meeting.status);
     }
   }, [meetings, myUid]);
 
@@ -127,7 +137,7 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
           topRowIndex={topRowIndex}
           nightStartHour={nightStartHour}
           nightEndHour={nightEndHour}
-          meetings={paired ? meetings : []}
+          meetings={paired ? visibleMeetings : []}
           myUid={myUid}
           onCreateMeeting={(instant) => {
             if (!paired) return;

@@ -4,6 +4,13 @@ import { Sheet } from "../Sheet";
 import { usePairingStore } from "../../state/usePairingStore";
 import { getUid } from "../../lib/firebase";
 
+const STATUS_LABEL: Record<string, string> = {
+  proposed: "等待對方回應",
+  confirmed: "已確認 ✓",
+  declined: "已婉拒",
+  cancelled: "已取消",
+};
+
 export function MeetingSheet({
   open,
   onOpenChange,
@@ -15,6 +22,7 @@ export function MeetingSheet({
 }) {
   const meetings = usePairingStore((s) => s.meetings);
   const respondToMeeting = usePairingStore((s) => s.respondToMeeting);
+  const deleteMeeting = usePairingStore((s) => s.deleteMeeting);
   const [busy, setBusy] = useState(false);
   const [myUid, setMyUid] = useState<string | null>(null);
 
@@ -34,6 +42,17 @@ export function MeetingSheet({
     }
   }
 
+  async function handleDelete() {
+    if (!meetingId) return;
+    setBusy(true);
+    try {
+      await deleteMeeting(meetingId);
+      onOpenChange(false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (!meeting) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange} title="行程詳情">
@@ -43,6 +62,7 @@ export function MeetingSheet({
   }
 
   const isMine = myUid !== null && meeting.proposedByUid === myUid;
+  const isActive = meeting.status === "proposed" || meeting.status === "confirmed";
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange} title="行程詳情">
@@ -53,8 +73,7 @@ export function MeetingSheet({
         </p>
         {meeting.title && <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>{meeting.title}</p>}
         <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>
-          狀態：
-          {meeting.status === "proposed" ? "等待對方回應" : meeting.status === "confirmed" ? "已確認 ✓" : "已婉拒"}
+          狀態：{STATUS_LABEL[meeting.status] ?? meeting.status}
         </p>
       </div>
       {meeting.status === "proposed" && !isMine && (
@@ -76,6 +95,16 @@ export function MeetingSheet({
             婉拒
           </button>
         </div>
+      )}
+      {isActive && (
+        <button
+          onClick={handleDelete}
+          disabled={busy}
+          className="w-full rounded-full py-2.5 mt-3"
+          style={{ fontSize: 14, fontWeight: 600, background: "var(--glass-bg-strong)", color: "#ff6b6b" }}
+        >
+          刪除行程
+        </button>
       )}
     </Sheet>
   );

@@ -20,7 +20,8 @@ export interface MeetingData {
   title?: string;
   notes?: string;
   proposedByUid: string;
-  status: "proposed" | "confirmed" | "declined";
+  status: "proposed" | "confirmed" | "declined" | "cancelled";
+  cancelledByUid?: string;
   createdAt: string;
 }
 
@@ -109,6 +110,13 @@ export async function createMeeting(
 
 export async function respondToMeetingDoc(pairingId: string, meetingId: string, status: "confirmed" | "declined") {
   await updateDoc(doc(db, "pairings", pairingId, "meetings", meetingId), { status });
+}
+
+export async function cancelMeetingDoc(pairingId: string, meetingId: string, uid: string) {
+  await updateDoc(doc(db, "pairings", pairingId, "meetings", meetingId), {
+    status: "cancelled",
+    cancelledByUid: uid,
+  });
 }
 
 export function subscribeToMeetings(pairingId: string, cb: (meetings: MeetingWithId[]) => void) {
