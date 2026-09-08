@@ -29,12 +29,15 @@ export function MeetingBlock({
 
   if (meeting.status === "confirmed") {
     // Both sides agreed -- merge into a single centered pill, like the day-divider labels.
+    // Nudge away from the row's own hour label: a :00 start sits near the top of its row
+    // (label is below), a :30 start sits near the bottom (label is above).
+    const nudge = start.minute === 0 ? 10 : -10;
     return (
       <div
         onClick={handleClick}
         className="absolute rounded-full px-5 py-1.5 flex items-center justify-center cursor-pointer"
         style={{
-          top: top + height / 2 - 14,
+          top: top + height / 2 - 14 + nudge,
           left: "50%",
           transform: "translateX(-50%)",
           height: 28,
