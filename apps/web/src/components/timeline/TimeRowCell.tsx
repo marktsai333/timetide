@@ -36,11 +36,6 @@ export function TimeRowCell({
     >
       <span
         style={{
-          position: "relative",
-          zIndex: 6,
-          background: "var(--bg)",
-          padding: "1px 4px",
-          borderRadius: 6,
           fontVariantNumeric: "tabular-nums",
           fontSize: onHour ? 15 : 13,
           fontWeight: onHour ? 600 : 400,
