@@ -20,8 +20,8 @@ const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 
 onBackgroundMessage(messaging, (payload) => {
-  const title = payload.notification?.title ?? "TimeTide";
-  const body = payload.notification?.body ?? "";
+  const title = payload.data?.title ?? "TimeTide";
+  const body = payload.data?.body ?? "";
   self.registration.showNotification(title, {
     body,
     icon: "/timetide/icons/icon-192.png",
