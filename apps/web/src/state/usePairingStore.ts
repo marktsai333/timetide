@@ -23,7 +23,13 @@ interface PairingState {
   hydrate: () => Promise<void>;
   createInviteCode: () => Promise<{ inviteCode: string; expiresAt: string }>;
   redeemInviteCode: (code: string) => Promise<void>;
-  createMeeting: (meeting: { startAt: string; endAt: string; title?: string; notes?: string }) => Promise<void>;
+  createMeeting: (meeting: {
+    startAt: string;
+    endAt: string;
+    title?: string;
+    notes?: string;
+    reminderMinutesBefore?: number;
+  }) => Promise<void>;
   respondToMeeting: (meetingId: string, status: "confirmed" | "declined") => Promise<void>;
   deleteMeeting: (meetingId: string) => Promise<void>;
   leavePairing: () => Promise<void>;

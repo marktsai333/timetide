@@ -15,12 +15,14 @@ export function CreateMeetingSheet({
   const createMeeting = usePairingStore((s) => s.createMeeting);
   const [start, setStart] = useState<DateTime>(() => DateTime.now());
   const [title, setTitle] = useState("");
+  const [reminderMinutesBefore, setReminderMinutesBefore] = useState(15);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (open) {
       setStart(initialStart ?? roundUpToHalfHour(DateTime.now()));
       setTitle("");
+      setReminderMinutesBefore(15);
     }
   }, [open, initialStart]);
 
@@ -29,7 +31,7 @@ export function CreateMeetingSheet({
     try {
       const startAt = start.toUTC().toISO()!;
       const endAt = start.plus({ minutes: 30 }).toUTC().toISO()!;
-      await createMeeting({ startAt, endAt, title: title.trim() || "打電話" });
+      await createMeeting({ startAt, endAt, title: title.trim() || "打電話", reminderMinutesBefore });
       onOpenChange(false);
     } finally {
       setBusy(false);
@@ -84,6 +86,27 @@ export function CreateMeetingSheet({
           className="rounded-2xl px-4 py-3"
           style={{ background: "var(--glass-bg-strong)", fontSize: 15 }}
         />
+        <div className="flex flex-col gap-1.5">
+          <p style={{ fontSize: 12, color: "var(--text-muted)" }}>提前提醒</p>
+          <div className="flex gap-2">
+            {[5, 15, 30, 60].map((mins) => (
+              <button
+                key={mins}
+                onClick={() => setReminderMinutesBefore(mins)}
+                className="flex-1 rounded-full py-2"
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  background: "var(--glass-bg-strong)",
+                  border: reminderMinutesBefore === mins ? "1px solid var(--meeting-accent)" : "1px solid transparent",
+                  color: reminderMinutesBefore === mins ? "var(--meeting-accent)" : "var(--text-muted)",
+                }}
+              >
+                {mins} 分鐘
+              </button>
+            ))}
+          </div>
+        </div>
         <button
           onClick={handleSubmit}
           disabled={busy}

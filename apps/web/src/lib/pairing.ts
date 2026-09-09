@@ -25,6 +25,8 @@ export interface MeetingData {
   status: "proposed" | "confirmed" | "declined" | "cancelled";
   cancelledByUid?: string;
   createdAt: string;
+  reminderMinutesBefore: number;
+  reminderSent: boolean;
 }
 
 export interface MeetingWithId extends MeetingData {
@@ -106,10 +108,12 @@ export function subscribeToPairing(pairingId: string, cb: (data: PairingData | n
 export async function createMeeting(
   pairingId: string,
   uid: string,
-  meeting: { startAt: string; endAt: string; title?: string; notes?: string },
+  meeting: { startAt: string; endAt: string; title?: string; notes?: string; reminderMinutesBefore?: number },
 ) {
   const data: MeetingData = {
     ...meeting,
+    reminderMinutesBefore: meeting.reminderMinutesBefore ?? 15,
+    reminderSent: false,
     proposedByUid: uid,
     status: "proposed",
     createdAt: new Date().toISOString(),
