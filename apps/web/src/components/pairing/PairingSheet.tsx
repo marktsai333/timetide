@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Sheet } from "../Sheet";
 import { usePairingStore } from "../../state/usePairingStore";
+import { getUid } from "../../lib/firebase";
+import { requestPushPermission } from "../../lib/push";
 
 export function PairingSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const [tab, setTab] = useState<"create" | "redeem">("create");
@@ -22,6 +24,14 @@ export function PairingSheet({ open, onOpenChange }: { open: boolean; onOpenChan
     } finally {
       setBusy(false);
     }
+  }
+
+  const [pushStatus, setPushStatus] = useState<"idle" | "granted" | "denied" | "unsupported">("idle");
+
+  async function handleEnablePush() {
+    const uid = await getUid();
+    const result = await requestPushPermission(uid);
+    setPushStatus(result);
   }
 
   async function handleCreate() {
@@ -79,6 +89,20 @@ export function PairingSheet({ open, onOpenChange }: { open: boolean; onOpenChan
     return (
       <Sheet open={open} onOpenChange={onOpenChange} title="配對狀態">
         <p style={{ fontSize: 14, color: "var(--text-muted)" }}>已經跟對方配對成功 🎉</p>
+        <button
+          onClick={handleEnablePush}
+          disabled={pushStatus === "granted"}
+          className="w-full rounded-full py-2.5 mt-3"
+          style={{ fontSize: 14, fontWeight: 600, background: "var(--glass-bg-strong)" }}
+        >
+          {pushStatus === "granted"
+            ? "推播通知已開啟 ✓"
+            : pushStatus === "denied"
+              ? "被拒絕，請到手機設定開啟通知權限"
+              : pushStatus === "unsupported"
+                ? "此瀏覽器不支援推播"
+                : "開啟推播通知"}
+        </button>
         <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 12 }}>
           如果對方斷線、換裝置，或想重新配對，可以在這裡解除配對後重新產生邀請碼。
         </p>

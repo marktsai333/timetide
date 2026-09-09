@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { getUid } from "../lib/firebase";
 import { clearPairingId, loadPairingId, savePairingId } from "../lib/db";
+import { sendPushNotification } from "../lib/push";
 import {
   cancelMeetingDoc,
   createInvite,
@@ -84,21 +85,46 @@ export const usePairingStore = create<PairingState>((set, get) => {
       }
     },
     async createMeeting(meeting) {
-      const { pairingId } = get();
+      const { pairingId, memberUids } = get();
       if (!pairingId) return;
       const uid = await getUid();
       await createMeetingApi(pairingId, uid, meeting);
+      const recipientUid = memberUids.find((m) => m !== uid);
+      if (recipientUid) {
+        void sendPushNotification({
+          recipientUid,
+          title: "新的行程邀請",
+          body: meeting.title || "打電話",
+        });
+      }
     },
     async respondToMeeting(meetingId, status) {
-      const { pairingId } = get();
+      const { pairingId, memberUids } = get();
       if (!pairingId) return;
+      const uid = await getUid();
       await respondToMeetingDoc(pairingId, meetingId, status);
+      const recipientUid = memberUids.find((m) => m !== uid);
+      if (recipientUid) {
+        void sendPushNotification({
+          recipientUid,
+          title: status === "confirmed" ? "行程已確認" : "行程被婉拒",
+          body: "點開 TimeTide 查看",
+        });
+      }
     },
     async deleteMeeting(meetingId) {
-      const { pairingId } = get();
+      const { pairingId, memberUids } = get();
       if (!pairingId) return;
       const uid = await getUid();
       await cancelMeetingDoc(pairingId, meetingId, uid);
+      const recipientUid = memberUids.find((m) => m !== uid);
+      if (recipientUid) {
+        void sendPushNotification({
+          recipientUid,
+          title: "對方刪除了一筆行程",
+          body: "點開 TimeTide 查看",
+        });
+      }
     },
     async leavePairing() {
       const { pairingId } = get();
