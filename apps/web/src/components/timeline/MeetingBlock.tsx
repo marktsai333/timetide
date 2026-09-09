@@ -31,7 +31,7 @@ export function MeetingBlock({
     // Both sides agreed -- merge into a single centered pill, like the day-divider labels.
     // Nudge away from the row's own hour label: a :00 start sits near the top of its row
     // (label is below), a :30 start sits near the bottom (label is above).
-    const nudge = start.minute === 0 ? 10 : -10;
+    const nudge = start.minute === 0 ? -10 : 10;
     return (
       <div
         onClick={handleClick}
