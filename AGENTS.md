@@ -2,9 +2,10 @@
 
 ## 專案概覽
 
-- 技術棧：npm workspaces monorepo。`apps/web`（Vite + React + TypeScript、Tailwind CSS v4、zustand、`motion`、`idb`、`@tanstack/react-virtual`、`luxon`、`vite-plugin-pwa`）、`apps/api`（Fastify + TypeScript + Prisma + SQLite）、`packages/shared`（zod schema，前後端共用）。
-- 使用情境：兩個人（本人 + 另一半/朋友）分隔兩地、有時差，用來查看彼此當地時間並約時間見面。沒有 App Store 上架，用 PWA（加入主畫面）的方式在 iPhone 上使用。
-- 這次（第一輪）只做：本機、雙方時區手動設定的雙軌時間軸 MVP，以及帳號/配對/行事曆串接的後端骨架（不接真的 Google/Apple OAuth）。詳細規劃見 [`docs/design-plan.md`](docs/design-plan.md)。
+- 技術棧：npm workspaces monorepo。`apps/web`（Vite + React + TypeScript、Tailwind CSS v4、zustand、`motion`、`idb`、`@tanstack/react-virtual`、`luxon`、`vite-plugin-pwa`、`firebase`）、`push-server`（獨立部署到 Vercel 的 Serverless Functions，用 `firebase-admin` 發推播，不屬於 npm workspace）。
+- 使用情境：兩個人（本人 + 另一半/朋友）分隔兩地、有時差，用來查看彼此當地時間、配對、約時間、互相收到推播提醒。沒有 App Store 上架，用 PWA（加入主畫面）的方式在 iPhone 上使用。
+- **架構已從原本規劃的 Fastify+Prisma 後端改成 Firebase**（Firestore + Anonymous Auth + Cloud Messaging），原因跟完整歷程見 [`docs/project-handoff.md`](docs/project-handoff.md)。`apps/api`（舊的 Fastify 骨架）、`Dockerfile`、`.dockerignore` 還留在 repo 裡但已停止開發、不部署，之後真的要做完整 Google/Apple 行事曆 OAuth 整合時可能還會用到。
+- 目前功能：雙軌時間軸、配對邀請碼、多筆行程（點時間軸建立、提議/確認/婉拒/刪除）、即時同步、真正的手機推播通知（含快到了的提醒）。詳細規劃歷程見 [`docs/design-plan.md`](docs/design-plan.md)；完整技術教學跟名詞解釋見 [`docs/complete-tech-tutorial.md`](docs/complete-tech-tutorial.md)。
 
 ## 標準工作流程（每次做畫面/UI 相關開發都要遵守）
 
