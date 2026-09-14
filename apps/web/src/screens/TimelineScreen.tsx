@@ -32,16 +32,18 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
   const [createMeetingOpen, setCreateMeetingOpen] = useState(false);
   const [createMeetingAt, setCreateMeetingAt] = useState<DateTime | null>(null);
   const [detailMeetingId, setDetailMeetingId] = useState<string | null>(null);
+  const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
   const [myUid, setMyUid] = useState<string | null>(null);
   const now = useNowTick();
   const hydratePairing = usePairingStore((s) => s.hydrate);
   const paired = usePairingStore((s) => s.memberUids.length >= 2);
   const meetings = usePairingStore((s) => s.meetings);
+  const updateMeetingTime = usePairingStore((s) => s.updateMeetingTime);
   const visibleMeetings = useMemo(
     () => meetings.filter((m) => m.status === "proposed" || m.status === "confirmed"),
     [meetings],
   );
-  const prevStatusRef = useRef<Map<string, string> | null>(null);
+  const prevMeetingVersionRef = useRef<Map<string, string> | null>(null);
 
   useEffect(() => {
     void hydratePairing();
@@ -50,23 +52,33 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
 
   useEffect(() => {
     if (!myUid) return;
-    if (prevStatusRef.current === null) {
+    if (prevMeetingVersionRef.current === null) {
       // First load: record the current state without popping up for pre-existing meetings.
-      prevStatusRef.current = new Map(meetings.map((m) => [m.id, m.status]));
+      prevMeetingVersionRef.current = new Map(
+        meetings.map((meeting) => [meeting.id, `${meeting.status}:${meeting.startAt}:${meeting.endAt}`]),
+      );
       return;
     }
     for (const meeting of meetings) {
-      const prevStatus = prevStatusRef.current.get(meeting.id);
-      if (prevStatus === meeting.status) continue;
-      const isNewProposal = prevStatus === undefined && meeting.status === "proposed" && meeting.proposedByUid !== myUid;
+      const version = `${meeting.status}:${meeting.startAt}:${meeting.endAt}`;
+      const previousVersion = prevMeetingVersionRef.current.get(meeting.id);
+      if (previousVersion === version) continue;
+      const previousStatus = previousVersion?.split(":", 1)[0];
+      const isNewOrUpdatedProposal = meeting.status === "proposed" && meeting.proposedByUid !== myUid;
       const isCancelledByOther =
-        meeting.status === "cancelled" && meeting.cancelledByUid !== myUid && prevStatus !== "cancelled";
-      if (isNewProposal || isCancelledByOther) {
+        meeting.status === "cancelled" && meeting.cancelledByUid !== myUid && previousStatus !== "cancelled";
+      if (isNewOrUpdatedProposal || isCancelledByOther) {
         setDetailMeetingId(meeting.id);
       }
-      prevStatusRef.current.set(meeting.id, meeting.status);
+      prevMeetingVersionRef.current.set(meeting.id, version);
     }
   }, [meetings, myUid]);
+
+  useEffect(() => {
+    if (selectedMeetingId && !visibleMeetings.some((meeting) => meeting.id === selectedMeetingId)) {
+      setSelectedMeetingId(null);
+    }
+  }, [selectedMeetingId, visibleMeetings]);
 
   const virtualizer = useVirtualizer({
     count: TOTAL_HOURS,
@@ -139,12 +151,17 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
           nightEndHour={nightEndHour}
           meetings={paired ? visibleMeetings : []}
           myUid={myUid}
+          selectedMeetingId={selectedMeetingId}
+          getScrollElement={() => parentRef.current}
           onCreateMeeting={(instant) => {
             if (!paired) return;
             setCreateMeetingAt(instant);
             setCreateMeetingOpen(true);
           }}
-          onSelectMeeting={(meetingId) => setDetailMeetingId(meetingId)}
+          onActivateMeeting={setSelectedMeetingId}
+          onOpenMeetingDetails={(meetingId) => setDetailMeetingId(meetingId)}
+          onChangeMeetingTime={updateMeetingTime}
+          onClearMeetingSelection={() => setSelectedMeetingId(null)}
         />
       </div>
       <TimezonePicker
@@ -161,11 +178,17 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
         onChange={setNightHours}
       />
       <PairingSheet open={pairingOpen} onOpenChange={setPairingOpen} />
-      <CreateMeetingSheet open={createMeetingOpen} onOpenChange={setCreateMeetingOpen} initialStart={createMeetingAt} />
+      <CreateMeetingSheet
+        open={createMeetingOpen}
+        onOpenChange={setCreateMeetingOpen}
+        initialStart={createMeetingAt}
+        ianaTimezone={self.ianaTimezone}
+      />
       <MeetingSheet
         open={detailMeetingId !== null}
         onOpenChange={(open) => !open && setDetailMeetingId(null)}
         meetingId={detailMeetingId}
+        ianaTimezone={self.ianaTimezone}
       />
     </div>
   );

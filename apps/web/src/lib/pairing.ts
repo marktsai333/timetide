@@ -25,6 +25,7 @@ export interface MeetingData {
   status: "proposed" | "confirmed" | "declined" | "cancelled";
   cancelledByUid?: string;
   createdAt: string;
+  updatedAt?: string;
   reminderMinutesBefore: number;
   reminderSent: boolean;
 }
@@ -123,6 +124,24 @@ export async function createMeeting(
 
 export async function respondToMeetingDoc(pairingId: string, meetingId: string, status: "confirmed" | "declined") {
   await updateDoc(doc(db, "pairings", pairingId, "meetings", meetingId), { status });
+}
+
+export async function updateMeetingTimeDoc(
+  pairingId: string,
+  meetingId: string,
+  uid: string,
+  startAt: string,
+  endAt: string,
+) {
+  await updateDoc(doc(db, "pairings", pairingId, "meetings", meetingId), {
+    startAt,
+    endAt,
+    status: "proposed",
+    proposedByUid: uid,
+    reminderSent: false,
+    updatedAt: new Date().toISOString(),
+    cancelledByUid: deleteField(),
+  });
 }
 
 export async function cancelMeetingDoc(pairingId: string, meetingId: string, uid: string) {

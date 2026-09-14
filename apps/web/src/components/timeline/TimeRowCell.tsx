@@ -27,15 +27,17 @@ export function TimeRowCell({
   const pastOpacity = isPast ? 0.55 : 1;
 
   return (
-    <div
-      className="h-full flex items-center px-3"
-      style={{
-        justifyContent: align === "left" ? "flex-end" : "flex-start",
-        opacity: nightOpacity * pastOpacity,
-      }}
-    >
+    <div className="relative h-full" style={{ opacity: nightOpacity * pastOpacity }}>
       <span
         style={{
+          position: "absolute",
+          top: 0,
+          ...(align === "left" ? { right: 12 } : { left: 12 }),
+          transform: "translateY(-50%)",
+          zIndex: 6,
+          lineHeight: 1.2,
+          pointerEvents: "none",
+          textShadow: "0 1px 5px var(--bg), 0 0 10px var(--bg)",
           fontVariantNumeric: "tabular-nums",
           fontSize: onHour ? 15 : 13,
           fontWeight: onHour ? 600 : 400,

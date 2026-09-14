@@ -3,6 +3,7 @@ import { DateTime } from "luxon";
 import { Sheet } from "../Sheet";
 import { usePairingStore } from "../../state/usePairingStore";
 import { getUid } from "../../lib/firebase";
+import { formatMeetingDuration } from "../../lib/meeting-time";
 
 const STATUS_LABEL: Record<string, string> = {
   proposed: "等待對方回應",
@@ -15,10 +16,12 @@ export function MeetingSheet({
   open,
   onOpenChange,
   meetingId,
+  ianaTimezone,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   meetingId: string | null;
+  ianaTimezone: string;
 }) {
   const meetings = usePairingStore((s) => s.meetings);
   const respondToMeeting = usePairingStore((s) => s.respondToMeeting);
@@ -63,13 +66,20 @@ export function MeetingSheet({
 
   const isMine = myUid !== null && meeting.proposedByUid === myUid;
   const isActive = meeting.status === "proposed" || meeting.status === "confirmed";
+  const start = DateTime.fromISO(meeting.startAt).setZone(ianaTimezone).setLocale("zh-TW");
+  const end = DateTime.fromISO(meeting.endAt).setZone(ianaTimezone).setLocale("zh-TW");
+  const rangeLabel = start.hasSame(end, "day")
+    ? `${start.toFormat("yyyy/MM/dd (ccc) HH:mm")} – ${end.toFormat("HH:mm")}`
+    : `${start.toFormat("yyyy/MM/dd (ccc) HH:mm")} – ${end.toFormat("yyyy/MM/dd (ccc) HH:mm")}`;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange} title="行程詳情">
       <div className="rounded-2xl p-4" style={{ background: "var(--glass-bg-strong)" }}>
         <p style={{ fontSize: 16, fontWeight: 700 }}>
-          {DateTime.fromISO(meeting.startAt).toLocal().toFormat("yyyy/MM/dd HH:mm")} –{" "}
-          {DateTime.fromISO(meeting.endAt).toLocal().toFormat("HH:mm")}
+          {rangeLabel}
+        </p>
+        <p style={{ fontSize: 12, color: "var(--meeting-accent)", marginTop: 5, fontWeight: 700 }}>
+          {formatMeetingDuration(start, end)}
         </p>
         {meeting.title && <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>{meeting.title}</p>}
         <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>

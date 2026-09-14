@@ -51,6 +51,7 @@ timetide/
 - **必須做對的細節**：同一列（同一絕對時刻）在兩個時區的「當地日期」可能不同（例如台北週二早上 = 洛杉磯週一傍晚）。`DayDivider` 必須**各自獨立**用自己那一軌的日期變化來判斷，不能用另一軌的日期反推。這個「換日瞬間」正是這個 app 最有情感價值的部分，值得做專屬的視覺處理（例如日期標籤淡入），不是隨便一條分隔線。
 - **NowIndicator**（現在時刻的指示線）：橫跨兩軌的玻璃感光線，位置用 `requestAnimationFrame`/`setInterval` 連續計算（不卡在整點格線上），呼吸動畫用 opacity 0.85↔1 + scale 1.0↔1.03、約 1.8 秒循環（依 `apple-design` 規範避免過慢的全螢幕級呼吸感造成不適）；`prefers-reduced-motion` 時改成靜態實線。
 - **動效原則**：時間軸本身的捲動**用原生 `overflow-y: auto`**，不要自己刻拖曳物理——iOS Safari 原生就有正確的 rubber-banding 和慣性減速（`apple-design` 規範第 9、6 點）。把 `motion` 的彈簧動畫留給真正需要客製手勢的地方：TimezonePicker 用 sheet 下拉關閉（直接沿用 [expense-tracker/src/components/Sheet.tsx](/Users/marktsai333/Projects/expense-tracker/src/components/Sheet.tsx) 的拖曳/阻尼參數）、頂部半透明 toolbar（模糊背景、內容從下方捲過）。
+- **行程調整**：行程不固定為 30 分鐘。新增時可獨立設定開始與結束（支援跨日、沒有最長時長限制）；時間軸先點選行程，再拖曳本體移動整段，或拖上下握把調整開始／結束。拖曳放開時吸附至 15 分鐘刻度；已確認行程被改時會重新變成待確認，避免單方面改動已同意的時間。
 - **iOS 震動限制**：iOS Safari 完全不支援 Vibration API（`navigator.vibrate` 在 iPhone 上是 no-op），`lib/haptics.ts` 要包 `if ('vibrate' in navigator)` 防呆，但實際的「觸覺回饋」要靠彈簧動效本身的即時性，必要時搭配極短的 Web Audio 提示音（節制使用）。
 
 ## 元件清單

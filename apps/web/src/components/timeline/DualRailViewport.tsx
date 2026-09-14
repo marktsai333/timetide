@@ -2,6 +2,7 @@ import type { DateTime } from "luxon";
 import type { VirtualItem } from "@tanstack/react-virtual";
 import type { TimezoneProfile } from "@timetide/shared";
 import { rowInstantAt } from "../../lib/rows";
+import { PX_PER_HOUR } from "../../lib/timeline-constants";
 import { formatDayLabel } from "../../lib/timezone";
 import type { MeetingWithId } from "../../lib/pairing";
 import { TimeRail } from "./TimeRail";
@@ -48,8 +49,13 @@ export function DualRailViewport({
   nightEndHour,
   meetings,
   myUid,
+  selectedMeetingId,
+  getScrollElement,
   onCreateMeeting,
-  onSelectMeeting,
+  onActivateMeeting,
+  onOpenMeetingDetails,
+  onChangeMeetingTime,
+  onClearMeetingSelection,
 }: {
   virtualItems: VirtualItem[];
   totalSize: number;
@@ -62,10 +68,16 @@ export function DualRailViewport({
   nightEndHour: number;
   meetings: MeetingWithId[];
   myUid: string | null;
+  selectedMeetingId: string | null;
+  getScrollElement: () => HTMLElement | null;
   onCreateMeeting: (instant: DateTime) => void;
-  onSelectMeeting: (meetingId: string) => void;
+  onActivateMeeting: (meetingId: string) => void;
+  onOpenMeetingDetails: (meetingId: string) => void;
+  onChangeMeetingTime: (meetingId: string, startAt: string, endAt: string) => Promise<void>;
+  onClearMeetingSelection: () => void;
 }) {
   const topInstant = rowInstantAt(topRowIndex, rangeStart);
+  const rangeEnd = rangeStart.plus({ hours: totalSize / PX_PER_HOUR });
 
   return (
     <div className="relative" style={{ height: totalSize }}>
@@ -90,14 +102,25 @@ export function DualRailViewport({
           key={meeting.id}
           meeting={meeting}
           rangeStart={rangeStart}
+          rangeEnd={rangeEnd}
           myUid={myUid}
-          onSelect={onSelectMeeting}
+          selected={selectedMeetingId === meeting.id}
+          selfTimezone={self.ianaTimezone}
+          partnerTimezone={partner.ianaTimezone}
+          getScrollElement={getScrollElement}
+          onActivate={onActivateMeeting}
+          onOpenDetails={onOpenMeetingDetails}
+          onChangeTime={onChangeMeetingTime}
         />
       ))}
       {virtualItems.map((item) => (
         <div
           key={item.key}
           onClick={(e) => {
+            if (selectedMeetingId !== null) {
+              onClearMeetingSelection();
+              return;
+            }
             const rect = e.currentTarget.getBoundingClientRect();
             const offsetY = e.clientY - rect.top;
             const rowInstant = rowInstantAt(item.index, rangeStart);

@@ -11,6 +11,7 @@ import {
   respondToMeetingDoc,
   subscribeToMeetings,
   subscribeToPairing,
+  updateMeetingTimeDoc,
   type MeetingWithId,
 } from "../lib/pairing";
 
@@ -31,6 +32,7 @@ interface PairingState {
     reminderMinutesBefore?: number;
   }) => Promise<void>;
   respondToMeeting: (meetingId: string, status: "confirmed" | "declined") => Promise<void>;
+  updateMeetingTime: (meetingId: string, startAt: string, endAt: string) => Promise<void>;
   deleteMeeting: (meetingId: string) => Promise<void>;
   leavePairing: () => Promise<void>;
 }
@@ -115,6 +117,26 @@ export const usePairingStore = create<PairingState>((set, get) => {
           recipientUid,
           title: status === "confirmed" ? "行程已確認" : "行程被婉拒",
           body: "點開 TimeTide 查看",
+        });
+      }
+    },
+    async updateMeetingTime(meetingId, startAt, endAt) {
+      const { pairingId, memberUids, meetings } = get();
+      if (!pairingId) return;
+      const startMillis = Date.parse(startAt);
+      const endMillis = Date.parse(endAt);
+      if (!Number.isFinite(startMillis) || !Number.isFinite(endMillis) || endMillis <= startMillis) {
+        throw new Error("結束時間必須晚於開始時間");
+      }
+      const uid = await getUid();
+      await updateMeetingTimeDoc(pairingId, meetingId, uid, startAt, endAt);
+      const recipientUid = memberUids.find((m) => m !== uid);
+      const meeting = meetings.find((item) => item.id === meetingId);
+      if (recipientUid) {
+        void sendPushNotification({
+          recipientUid,
+          title: "行程時間已更新",
+          body: `請重新確認「${meeting?.title || "打電話"}」`,
         });
       }
     },

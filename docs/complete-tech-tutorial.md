@@ -502,8 +502,9 @@ Vercel 本身也提供 Cron 功能，但**免費方案一天只能跑一次**，
 5. B 的手機（不管 App 開不開著）Service Worker 收到訊息，跳出系統通知
 6. 同時，因為 B 的 App 如果是開著的，Firestore 的 `onSnapshot` 監聽也會即時把新行程推給 B，[TimelineScreen.tsx](../apps/web/src/screens/TimelineScreen.tsx) 裡的自動彈窗邏輯偵測到「有新的、不是自己發的提議」，自動打開詳情視窗
 7. B 按「接受」，狀態改成 `"confirmed"`，寫回 Firestore；同樣的推播流程再跑一次通知 A
-8. 兩人的時間軸上，[MeetingBlock.tsx](../apps/web/src/components/timeline/MeetingBlock.tsx) 都畫出置中的金黃色膠囊，代表「雙方都同意的行程」
-9. 每 5 分鐘，cron-job.org 打一次 [check-reminders.ts](../push-server/api/check-reminders.ts)，它掃過所有 `"confirmed"` 且還沒提醒過的行程，發現這筆快到了，發推播提醒雙方，然後把 `reminderSent` 標記成 `true`，之後就不會重複提醒
+8. 兩人的時間軸上，[MeetingBlock.tsx](../apps/web/src/components/timeline/MeetingBlock.tsx) 會按真正的開始／結束時間畫出置中的液態玻璃色塊，代表「雙方都同意的行程」
+9. 任一方若點選行程後拖動本體或上下握把，系統會更新整段時間或時長，將狀態改回 `"proposed"`、重設提醒並通知另一方重新確認
+10. 每 5 分鐘，cron-job.org 打一次 [check-reminders.ts](../push-server/api/check-reminders.ts)，它掃過所有 `"confirmed"` 且還沒提醒過的行程，發現這筆快到了，發推播提醒雙方，然後把 `reminderSent` 標記成 `true`，之後就不會重複提醒
 
 ---
 
