@@ -4,12 +4,16 @@ export function TimelineToolbar({
   onOpenPairing,
   onOpenMeeting,
   paired,
+  syncing,
+  syncError,
 }: {
   onJumpToNow: () => void;
   onOpenNightSettings: () => void;
   onOpenPairing: () => void;
   onOpenMeeting: () => void;
   paired: boolean;
+  syncing: boolean;
+  syncError: boolean;
 }) {
   return (
     <div
@@ -22,7 +26,17 @@ export function TimelineToolbar({
         borderBottom: "1px solid var(--glass-border)",
       }}
     >
-      <span style={{ fontSize: 17, fontWeight: 700 }}>TimeTide</span>
+      <div className="flex items-center gap-2">
+        <span style={{ fontSize: 17, fontWeight: 700 }}>TimeTide</span>
+        {(syncing || syncError) && (
+          <span
+            aria-live="polite"
+            style={{ fontSize: 11, fontWeight: 600, color: syncError ? "#ff6b6b" : "var(--text-muted)" }}
+          >
+            {syncError ? "同步失敗" : "同步中…"}
+          </span>
+        )}
+      </div>
       <div className="flex items-center gap-2">
         {paired && (
           <button

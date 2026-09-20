@@ -36,8 +36,11 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
   const [myUid, setMyUid] = useState<string | null>(null);
   const now = useNowTick();
   const hydratePairing = usePairingStore((s) => s.hydrate);
+  const pairingId = usePairingStore((s) => s.pairingId);
   const paired = usePairingStore((s) => s.memberUids.length >= 2);
   const meetings = usePairingStore((s) => s.meetings);
+  const meetingsLoaded = usePairingStore((s) => s.meetingsLoaded);
+  const pairingStatus = usePairingStore((s) => s.status);
   const updateMeetingTime = usePairingStore((s) => s.updateMeetingTime);
   const visibleMeetings = useMemo(
     () => meetings.filter((m) => m.status === "proposed" || m.status === "confirmed"),
@@ -47,11 +50,16 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
 
   useEffect(() => {
     void hydratePairing();
-    void getUid().then(setMyUid);
+    void getUid().then(setMyUid).catch(() => setMyUid(null));
   }, [hydratePairing]);
 
   useEffect(() => {
-    if (!myUid) return;
+    // Do not compare until the first Firestore snapshot has established the
+    // baseline. Otherwise an old cancelled meeting looks like a new event.
+    if (!myUid || !pairingId || !meetingsLoaded) {
+      prevMeetingVersionRef.current = null;
+      return;
+    }
     if (prevMeetingVersionRef.current === null) {
       // First load: record the current state without popping up for pre-existing meetings.
       prevMeetingVersionRef.current = new Map(
@@ -66,13 +74,16 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
       const previousStatus = previousVersion?.split(":", 1)[0];
       const isNewOrUpdatedProposal = meeting.status === "proposed" && meeting.proposedByUid !== myUid;
       const isCancelledByOther =
-        meeting.status === "cancelled" && meeting.cancelledByUid !== myUid && previousStatus !== "cancelled";
+        previousVersion !== undefined &&
+        meeting.status === "cancelled" &&
+        meeting.cancelledByUid !== myUid &&
+        previousStatus !== "cancelled";
       if (isNewOrUpdatedProposal || isCancelledByOther) {
         setDetailMeetingId(meeting.id);
       }
       prevMeetingVersionRef.current.set(meeting.id, version);
     }
-  }, [meetings, myUid]);
+  }, [meetings, myUid, meetingsLoaded, pairingId]);
 
   useEffect(() => {
     if (selectedMeetingId && !visibleMeetings.some((meeting) => meeting.id === selectedMeetingId)) {
@@ -118,6 +129,8 @@ export function TimelineScreen({ self, partner }: { self: TimezoneProfile; partn
           setCreateMeetingOpen(true);
         }}
         paired={paired}
+        syncing={pairingId !== null && !meetingsLoaded}
+        syncError={pairingId !== null && pairingStatus === "error"}
       />
       <div className="grid grid-cols-[1fr_auto_1fr]" style={{ borderBottom: "1px solid var(--glass-border)" }}>
         <RailHeader

@@ -12,6 +12,7 @@ import {
   runTransaction,
   serverTimestamp,
   setDoc,
+  type FirestoreError,
   updateDoc,
 } from "firebase/firestore";
 import { db } from "./firebase";
@@ -95,7 +96,11 @@ export async function leavePairing(pairingId: string, uid: string) {
   });
 }
 
-export function subscribeToPairing(pairingId: string, cb: (data: PairingData | null) => void) {
+export function subscribeToPairing(
+  pairingId: string,
+  cb: (data: PairingData | null) => void,
+  onError?: (error: FirestoreError) => void,
+) {
   return onSnapshot(doc(db, "pairings", pairingId), (snap) => {
     if (!snap.exists()) {
       cb(null);
@@ -103,7 +108,7 @@ export function subscribeToPairing(pairingId: string, cb: (data: PairingData | n
     }
     const data = snap.data();
     cb({ memberUids: data.memberUids ?? [] });
-  });
+  }, onError);
 }
 
 export async function createMeeting(
@@ -151,9 +156,13 @@ export async function cancelMeetingDoc(pairingId: string, meetingId: string, uid
   });
 }
 
-export function subscribeToMeetings(pairingId: string, cb: (meetings: MeetingWithId[]) => void) {
+export function subscribeToMeetings(
+  pairingId: string,
+  cb: (meetings: MeetingWithId[]) => void,
+  onError?: (error: FirestoreError) => void,
+) {
   const meetingsQuery = query(collection(db, "pairings", pairingId, "meetings"), orderBy("startAt"));
   return onSnapshot(meetingsQuery, (snap) => {
     cb(snap.docs.map((d) => ({ id: d.id, ...(d.data() as MeetingData) })));
-  });
+  }, onError);
 }

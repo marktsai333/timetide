@@ -19,6 +19,7 @@ interface PairingState {
   pairingId: string | null;
   memberUids: string[];
   meetings: MeetingWithId[];
+  meetingsLoaded: boolean;
   status: "idle" | "loading" | "paired" | "error";
   error: string | null;
   hydrate: () => Promise<void>;
@@ -44,11 +45,16 @@ export const usePairingStore = create<PairingState>((set, get) => {
   function subscribe(pairingId: string) {
     unsubscribePairing?.();
     unsubscribeMeetings?.();
+    set({ meetings: [], meetingsLoaded: false });
     unsubscribePairing = subscribeToPairing(pairingId, (data) => {
       set({ memberUids: data?.memberUids ?? [] });
+    }, (error) => {
+      set({ status: "error", error: error.message });
     });
     unsubscribeMeetings = subscribeToMeetings(pairingId, (meetings) => {
-      set({ meetings });
+      set({ meetings, meetingsLoaded: true });
+    }, (error) => {
+      set({ status: "error", error: error.message });
     });
   }
 
@@ -56,13 +62,26 @@ export const usePairingStore = create<PairingState>((set, get) => {
     pairingId: null,
     memberUids: [],
     meetings: [],
+    meetingsLoaded: false,
     status: "idle",
     error: null,
     async hydrate() {
-      const pairingId = await loadPairingId();
-      if (pairingId) {
+      set({ status: "loading", error: null });
+      try {
+        const pairingId = await loadPairingId();
+        if (!pairingId) {
+          set({ pairingId: null, memberUids: [], meetings: [], meetingsLoaded: true, status: "idle" });
+          return;
+        }
+
+        set({ pairingId, memberUids: [], meetings: [], meetingsLoaded: false, status: "loading" });
+        // Firestore listeners must start after Firebase Anonymous Auth has a UID.
+        // Otherwise the first snapshot can race the auth handshake on a cold start.
+        await getUid();
         subscribe(pairingId);
-        set({ pairingId, status: "paired" });
+        set({ status: "paired" });
+      } catch (e) {
+        set({ status: "error", error: (e as Error).message, meetingsLoaded: false });
       }
     },
     async createInviteCode() {
@@ -166,7 +185,7 @@ export const usePairingStore = create<PairingState>((set, get) => {
         unsubscribePairing = null;
         unsubscribeMeetings = null;
         await clearPairingId();
-        set({ pairingId: null, memberUids: [], meetings: [], status: "idle", error: null });
+        set({ pairingId: null, memberUids: [], meetings: [], meetingsLoaded: true, status: "idle", error: null });
       }
     },
   };
